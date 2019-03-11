@@ -8,12 +8,13 @@ from datetime import datetime
 ########################################################################################################################
 ### CASINO CLASS
 class Casino:
-    def __init__(self, name):
+    def __init__(self, name, monthYear):
         self.name = name
+        self.monthYear = monthYear
         self.data = dict()
 
     def printData(self):
-        print("name={0}, {1}".format(self.name, self.data))
+        print("name={0} monthYear={1}, Data{2}".format(self.name, self.monthYear, self.data))
 
 
 ########################################################################################################################
@@ -22,6 +23,31 @@ class Casino:
 ### function to generate load id(current unix time)
 def generateLoadId():
     return int(datetime.now().timestamp())
+
+
+########################################################################################################################
+### function to generate monthYear
+def toMonthYear(month, year):
+    monthYear = None
+    if month < 10:
+        monthYear = "0" + str(month) + str(year)
+    else:
+        monthYear = str(month) + str(year)
+    return monthYear
+
+
+########################################################################################################################
+### function to convert string € value to float
+def euroString2Float(value):
+
+    # remove €
+    data = value.replace(' €', '')
+    # remove . from data
+    data = data.replace('.', '')
+    # substitute , with .
+    data = data.replace(',', '.')
+
+    return (data)
 
 
 ########################################################################################################################
@@ -45,6 +71,58 @@ def printLog(text, value=None, value1=None, value2=None, value3=None):
 
 
 ########################################################################################################################
+### function to get data fore specific month
+def fetchCasinoMonthData(month, year):
+    monthDictionarie = {1: "Gennaio", 2: "Febbraio", 3: "Marzo", 4: "Aprile", 5: "Maggio", 6: "Giugno", 7: "Luglio",
+                        8: "Agosto", 9: "Settembre", 10: "Ottobre", 11: "Novembre", 12: "Dicembre"}
+
+    monthYear = toMonthYear(month, year)
+    url = "http://www.federgioco.it/ajax_dati_comparati.php?periodo={MONTH}&anno={YEAR}".format(
+        MONTH=monthDictionarie[month], YEAR=year)
+
+    # create casinos list
+    casinos = list()
+
+    # get html page data
+    source = urllib.request.urlopen(url).read()
+    soup = BeautifulSoup(source, "lxml")
+
+    # get table from html page
+    table = soup.table
+
+    # get table header
+    table_header = table.find_all("th")
+    # create casinos list
+    for singleColumn in table_header:
+        casinos.append(Casino(singleColumn.text, monthYear))
+
+    # remove position 0, "INTROITI DI GIOCO"
+    del casinos[0]
+
+    # get tables rows
+    table_rows = table.find_all("tr")
+    # get single row
+    for singleRow in table_rows:
+        # get columns from single row
+        columns = singleRow.find_all("td")
+        i = 0
+        gameName = None
+        # get single column from columns
+        for singleColumn in columns:
+            if i == 0:
+                # first column is game name
+                gameName = singleColumn.text
+                if gameName=="INGRESSI (numero)":
+                    gameName="INGRESSI"
+            else:
+                # others columns are data
+                casinos[i - 1].data[gameName] = euroString2Float(singleColumn.text)
+            i += 1
+
+    return casinos
+
+
+########################################################################################################################
 # PROGRAM
 ########################################################################################################################
 ##  CONFIG PARAMETERS - geting data from config file
@@ -53,44 +131,6 @@ def printLog(text, value=None, value1=None, value2=None, value3=None):
 ########################################################################################################################
 # generate load id
 loadId = generateLoadId()
-
-# create casinos list
-casinos = list()
-
-# get html page data
-source = urllib.request.urlopen("http://www.federgioco.it/ajax_dati_comparati.php?periodo=Gennaio&anno=2019").read()
-soup = BeautifulSoup(source, "lxml")
-
-# get table from html page
-table = soup.table
-
-# get table header
-table_header = table.find_all("th")
-# create casinos list
-for singleColumn in table_header:
-    casinos.append(Casino(singleColumn.text))
-
-# remove position 0, "INTROITI DI GIOCO"
-del casinos[0]
-
-# get tables rows
-table_rows = table.find_all("tr")
-# get single row
-for singleRow in table_rows:
-    # get columns from single row
-    columns = singleRow.find_all("td")
-    i = 0
-    gameName = None
-    # get single column from columns
-    for singleColumn in columns:
-        if i == 0:
-            #first column is game name
-            gameName = singleColumn.text
-        else:
-            #others columns are data
-            casinos[i - 1].data[gameName] = singleColumn.text
-        i += 1
-
-
+casinos = fetchCasinoMonthData(11, 2018)
 for item in casinos:
     item.printData()
