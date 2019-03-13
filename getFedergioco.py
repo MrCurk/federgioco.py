@@ -2,8 +2,9 @@ import json
 import sys
 import urllib.request
 from bs4 import BeautifulSoup
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
+import cx_Oracle
 
 
 ########################################################################################################################
@@ -187,6 +188,21 @@ else:
 ########################################################################################################################
 # generate load id
 loadId = generateLoadId()
-casinos = fetchCasinoMonthData(1, 2019)
+
+#set month and year
+monthYear = None
+if True:
+    monthYear =(datetime.now().replace(day=1) - timedelta(days=1))
+else:
+    monthYear =(datetime.now().replace(day=1) - timedelta(days=1))
+
+monthNumber = int(monthYear.strftime('%m'))
+yearNumber = int(monthYear.strftime('%Y'))
+
+
+# get casino data fore specific month year
+casinos = fetchCasinoMonthData(monthNumber, yearNumber)
+
+# test print
 for item in casinos:
     item.printData()
