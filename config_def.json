@@ -1,0 +1,11 @@
+{
+  "PROXY_TYPE": "https",
+  "PROXY": "xxx",
+  "PROXY_PORT": "xxx",
+  "PROXY_USERNAME": "",
+  "PROXY_PASSWORD": "",
+  "DB_TNS": "xxx",
+  "DB_USERNAME": "xxx",
+  "DB_PASSWORD": "xxx",
+  "test_mode_no_db": "true"
+}
