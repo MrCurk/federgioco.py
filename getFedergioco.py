@@ -190,8 +190,7 @@ else:
 # generate load id
 loadId = generateLoadId()
 
-# set month and year and config file
-
+# get arguments and set month, year, config file
 if len(sys.argv) <= 2:  # without argument or with 1 argument
     dateToGetData = (datetime.now().replace(day=1) - timedelta(days=1))
     monthNumber = int(dateToGetData.strftime('%m'))
@@ -200,9 +199,32 @@ else:  # with config argument and month and year
     monthNumber = int(sys.argv[2])
     yearNumber = int(sys.argv[3])
 
-# get casino data fore specific month year
+# get casino data fore specific month year from web
 casinos = fetchCasinoMonthData(monthNumber, yearNumber)
 
-# test print
+# connect to db, when not in test mode
+con = None
+cursor = None
+if not test_mode_no_db:
+    con = cx_Oracle.connect(connection_string)
+    cursor = con.cursor()
+
+# loop through list of cities weather
 for item in casinos:
-    item.printData()
+    # inserting into db
+    if not test_mode_no_db:
+        printLog("inserting data weather current", item.name)
+        cursor.callproc('ADD_CITY_WEATHER',
+                        [loadId, item.country])
+        print()
+
+        printLog("End *****************", item.name)
+        print()
+    # testing mode only print
+    else:
+        # test print
+        item.printData()
+
+# close db connection
+if not test_mode_no_db:
+    con.close()
