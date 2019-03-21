@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import json
 import sys
 import urllib.request
@@ -31,13 +32,13 @@ def generateLoadId():
 
 ########################################################################################################################
 ### function to generate monthYear
-def toMonthYear(month, year):
-    monthYear = None
+def toYearMonth(month, year):
+    yearMonth = None
     if month < 10:
-        monthYear = "0" + str(month) + str(year)
+        yearMonth = str(year) + "0" + str(month)
     else:
-        monthYear = str(month) + str(year)
-    return monthYear
+        yearMonth = str(year) + str(month)
+    return yearMonth
 
 
 ########################################################################################################################
@@ -79,7 +80,7 @@ def fetchCasinoMonthData(month, year):
     monthDictionarie = {1: "Gennaio", 2: "Febbraio", 3: "Marzo", 4: "Aprile", 5: "Maggio", 6: "Giugno", 7: "Luglio",
                         8: "Agosto", 9: "Settembre", 10: "Ottobre", 11: "Novembre", 12: "Dicembre"}
 
-    monthYear = toMonthYear(month, year)
+    yearMonth = toYearMonth(month, year)
     url = "http://www.federgioco.it/ajax_dati_comparati.php?periodo={MONTH}&anno={YEAR}".format(
         MONTH=monthDictionarie[month], YEAR=year)
 
@@ -97,7 +98,7 @@ def fetchCasinoMonthData(month, year):
     table_header = table.find_all("th")
     # create casinos list
     for singleColumn in table_header:
-        casinos.append(Casino(singleColumn.text, monthYear))
+        casinos.append(Casino(singleColumn.text, yearMonth))
 
     # remove position 0, "INTROITI DI GIOCO"
     del casinos[0]
@@ -189,16 +190,15 @@ else:
 # generate load id
 loadId = generateLoadId()
 
-#set month and year
-monthYear = None
-if True:
-    monthYear =(datetime.now().replace(day=1) - timedelta(days=1))
-else:
-    monthYear =(datetime.now().replace(day=1) - timedelta(days=1))
+# set month and year and config file
 
-monthNumber = int(monthYear.strftime('%m'))
-yearNumber = int(monthYear.strftime('%Y'))
-
+if len(sys.argv) <= 2:  # without argument or with 1 argument
+    dateToGetData = (datetime.now().replace(day=1) - timedelta(days=1))
+    monthNumber = int(dateToGetData.strftime('%m'))
+    yearNumber = int(dateToGetData.strftime('%Y'))
+else:  # with config argument and month and year
+    monthNumber = int(sys.argv[2])
+    yearNumber = int(sys.argv[3])
 
 # get casino data fore specific month year
 casinos = fetchCasinoMonthData(monthNumber, yearNumber)
