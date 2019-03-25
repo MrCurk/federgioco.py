@@ -216,20 +216,20 @@ for item in casinos:
         printLog("inserting data weather current", item.name)
         cursor.callproc('ADD_ITALY_CASINO_DATA',
                         [loadId, item.monthYear,item.name,
-                         I_INGRESSI
-                         I_TOTALE
-                         I_ROULETTE_FRANCESE
-                         I_FAIROULETTE
-                         I_TRENTE_ET_QUARANTE
-                         I_CHEMIN_DE_FER
-                         I_POKER
-                         I_TEXAS_HOLDEM
-                         I_ROULETTE_AMERICANA
-                         I_BLACK_JACK
-                         I_CRAPS
-                         I_PUNTO_BANCO
-                         I_SLOT_MACHINES
-                         I_ALTRI])
+                         item.data["INGRESSI"],
+                         item.data["Totale Introiti Lordi"],
+                         item.data["Roulette Francese"],
+                         item.data["Fairoulette"],
+                         item.data["Trente et Quarante"],
+                         item.data["Chemin de Fer"],
+                         item.data["Poker"],
+                         item.data["Texas Hold'Em "],
+                         item.data["Roulette Americana"],
+                         item.data["Black Jack"],
+                         item.data["Craps"],
+                         item.data["Punto Banco"],
+                         item.data["Slot Machines"],
+                         item.data["Altri"]])
         print()
 
         printLog("End *****************", item.name)
@@ -237,7 +237,22 @@ for item in casinos:
     # testing mode only print
     else:
         # test print
-        item.printData()
+        #item.printData()
+        print(loadId, item.monthYear,item.name,
+        item.data["INGRESSI"],
+        item.data["Totale Introiti Lordi"],
+        item.data["Roulette Francese"],
+        item.data["Fairoulette"],
+        item.data["Trente et Quarante"],
+        item.data["Chemin de Fer"],
+        item.data["Poker"],
+        item.data["Texas Hold'Em "],
+        item.data["Roulette Americana"],
+        item.data["Black Jack"],
+        item.data["Craps"],
+        item.data["Punto Banco"],
+        item.data["Slot Machines"],
+        item.data["Altri"])
 
 # close db connection
 if not test_mode_no_db:
