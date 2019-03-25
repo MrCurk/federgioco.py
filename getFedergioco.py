@@ -53,6 +53,7 @@ def euroString2Float(value):
 
     return (data)
 
+
 ########################################################################################################################
 ### function to convert string 12,111 value to integer
 def string2Integer(value):
@@ -61,6 +62,7 @@ def string2Integer(value):
     # remove . from data
 
     return (data)
+
 
 ########################################################################################################################
 ### function print log
@@ -87,13 +89,13 @@ def printLog(text, value=None, value1=None, value2=None, value3=None):
 def fetchCasinoMonthData(month, year):
     monthDictionarie = {1: "Gennaio", 2: "Febbraio", 3: "Marzo", 4: "Aprile", 5: "Maggio", 6: "Giugno", 7: "Luglio",
                         8: "Agosto", 9: "Settembre", 10: "Ottobre", 11: "Novembre", 12: "Dicembre"}
-
-    yearMonth = toYearMonth(month, year)
-    url = "http://www.federgioco.it/ajax_dati_comparati.php?periodo={MONTH}&anno={YEAR}".format(
-        MONTH=monthDictionarie[month], YEAR=year)
-
     # create casinos list
     casinos = list()
+
+    yearMonth = toYearMonth(month, year)
+
+    url = "http://www.federgioco.it/ajax_dati_comparati.php?periodo={MONTH}&anno={YEAR}".format(
+        MONTH=monthDictionarie[month], YEAR=year)
 
     # get html page data
     source = urllib.request.urlopen(url).read()
@@ -128,9 +130,9 @@ def fetchCasinoMonthData(month, year):
                     gameName = "INGRESSI"
             else:
                 # others columns are data
-                if gameName == "INGRESSI": # INGRESSI has string format 11,111
+                if gameName == "INGRESSI":  # INGRESSI has string format 11,111
                     casinos[i - 1].data[gameName] = string2Integer(singleColumn.text)
-                else: # other data fromat is 11.111,11
+                else:  # other data fromat is 11.111,11
                     casinos[i - 1].data[gameName] = euroString2Float(singleColumn.text)
             i += 1
 
@@ -201,17 +203,39 @@ else:
 # generate load id
 loadId = generateLoadId()
 
+monthNumber = None
+yearNumber = None
+monthNumberLast = None
+yearNumberLast = None
+
+
 # get arguments and set month, year, config file
 if len(sys.argv) <= 2:  # without argument or with 1 argument
+    # date set to last month
     dateToGetData = (datetime.now().replace(day=1) - timedelta(days=1))
     monthNumber = int(dateToGetData.strftime('%m'))
     yearNumber = int(dateToGetData.strftime('%Y'))
+
+    # dateLast set to -2 month
+    if monthNumber == 1:
+        monthNumberLast = 12
+        yearNumberLast = yearNumber - 1
+    else:
+        monthNumberLast = monthNumber - 1
+        yearNumberLast = yearNumber
 else:  # with config argument and month and year
     monthNumber = int(sys.argv[2])
     yearNumber = int(sys.argv[3])
 
-# get casino data fore specific month year from web
-casinos = fetchCasinoMonthData(monthNumber, yearNumber)
+# create casinos list
+casinos = list()
+
+# get casino data for specific month year from web
+casinos.append(fetchCasinoMonthData(monthNumber, yearNumber))
+
+# get casino data for  month -2  from web
+if monthNumberLast is not None and yearNumberLast is not None:
+    casinos.append(fetchCasinoMonthData(monthNumberLast, yearNumberLast))
 
 # connect to db, when not in test mode
 con = None
@@ -220,50 +244,51 @@ if not test_mode_no_db:
     con = cx_Oracle.connect(connection_string)
     cursor = con.cursor()
 
-# loop through list of cities weather
-for item in casinos:
-    # inserting into db
-    if not test_mode_no_db:
-        printLog("inserting data weather current", item.name)
-        cursor.callproc('ADD_ITALY_CASINO_DATA',
-                        [loadId, item.monthYear,item.name,
-                         item.data["INGRESSI"],
-                         item.data["Totale Introiti Lordi"],
-                         item.data["Roulette Francese"],
-                         item.data["Fairoulette"],
-                         item.data["Trente et Quarante"],
-                         item.data["Chemin de Fer"],
-                         item.data["Poker"],
-                         item.data["Texas Hold'Em "],
-                         item.data["Roulette Americana"],
-                         item.data["Black Jack"],
-                         item.data["Craps"],
-                         item.data["Punto Banco"],
-                         item.data["Slot Machines"],
-                         item.data["Altri"]])
-        print()
+for casinoMonthData in casinos:
+    # loop through list of cities weather
+    for item in casinoMonthData:
+        # inserting into db
+        if not test_mode_no_db:
+            printLog("inserting data weather current", item.name)
+            cursor.callproc('ADD_ITALY_CASINO_DATA',
+                            [loadId, item.monthYear, item.name,
+                             item.data["INGRESSI"],
+                             item.data["Totale Introiti Lordi"],
+                             item.data["Roulette Francese"],
+                             item.data["Fairoulette"],
+                             item.data["Trente et Quarante"],
+                             item.data["Chemin de Fer"],
+                             item.data["Poker"],
+                             item.data["Texas Hold'Em "],
+                             item.data["Roulette Americana"],
+                             item.data["Black Jack"],
+                             item.data["Craps"],
+                             item.data["Punto Banco"],
+                             item.data["Slot Machines"],
+                             item.data["Altri"]])
+            print()
 
-        printLog("End *****************", item.name)
-        print()
-    # testing mode only print
-    else:
-        # test print
-        #item.printData()
-        print(loadId, item.monthYear,item.name,
-        item.data["INGRESSI"],
-        item.data["Totale Introiti Lordi"],
-        item.data["Roulette Francese"],
-        item.data["Fairoulette"],
-        item.data["Trente et Quarante"],
-        item.data["Chemin de Fer"],
-        item.data["Poker"],
-        item.data["Texas Hold'Em "],
-        item.data["Roulette Americana"],
-        item.data["Black Jack"],
-        item.data["Craps"],
-        item.data["Punto Banco"],
-        item.data["Slot Machines"],
-        item.data["Altri"])
+            printLog("End *****************", item.name)
+            print()
+        # testing mode only print
+        else:
+            # test print
+            # item.printData()
+            print(loadId, item.monthYear, item.name,
+                  item.data["INGRESSI"],
+                  item.data["Totale Introiti Lordi"],
+                  item.data["Roulette Francese"],
+                  item.data["Fairoulette"],
+                  item.data["Trente et Quarante"],
+                  item.data["Chemin de Fer"],
+                  item.data["Poker"],
+                  item.data["Texas Hold'Em "],
+                  item.data["Roulette Americana"],
+                  item.data["Black Jack"],
+                  item.data["Craps"],
+                  item.data["Punto Banco"],
+                  item.data["Slot Machines"],
+                  item.data["Altri"])
 
 # close db connection
 if not test_mode_no_db:
