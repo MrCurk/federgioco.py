@@ -214,8 +214,22 @@ for item in casinos:
     # inserting into db
     if not test_mode_no_db:
         printLog("inserting data weather current", item.name)
-        cursor.callproc('ADD_CITY_WEATHER',
-                        [loadId, item.country])
+        cursor.callproc('ADD_ITALY_CASINO_DATA',
+                        [loadId, item.monthYear,item.name,
+                         I_INGRESSI
+                         I_TOTALE
+                         I_ROULETTE_FRANCESE
+                         I_FAIROULETTE
+                         I_TRENTE_ET_QUARANTE
+                         I_CHEMIN_DE_FER
+                         I_POKER
+                         I_TEXAS_HOLDEM
+                         I_ROULETTE_AMERICANA
+                         I_BLACK_JACK
+                         I_CRAPS
+                         I_PUNTO_BANCO
+                         I_SLOT_MACHINES
+                         I_ALTRI])
         print()
 
         printLog("End *****************", item.name)
