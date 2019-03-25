@@ -13,13 +13,13 @@ import cx_Oracle
 ########################################################################################################################
 ### CASINO CLASS
 class Casino:
-    def __init__(self, name, monthYear):
+    def __init__(self, name, yearMonthr):
         self.name = name
-        self.monthYear = monthYear
+        self.yearMonth = yearMonthr
         self.data = dict()
 
     def printData(self):
-        print("name={0} monthYear={1}, Data{2}".format(self.name, self.monthYear, self.data))
+        print("name={0} monthYear={1}, Data{2}".format(self.name, self.yearMonth, self.data))
 
 
 ########################################################################################################################
@@ -98,8 +98,12 @@ def fetchCasinoMonthData(month, year):
         MONTH=monthDictionarie[month], YEAR=year)
 
     # get html page data
+
     source = urllib.request.urlopen(url).read()
     soup = BeautifulSoup(source, "lxml")
+    if soup.find(text="DATI NON PRESENTI"):
+        printLog("ERR - NON DATA FOUND - EXIT PROGRAM", yearMonth)
+        exit()
 
     # get table from html page
     table = soup.table
@@ -208,7 +212,6 @@ yearNumber = None
 monthNumberLast = None
 yearNumberLast = None
 
-
 # get arguments and set month, year, config file
 if len(sys.argv) <= 2:  # without argument or with 1 argument
     # date set to last month
@@ -230,12 +233,12 @@ else:  # with config argument and month and year
 # create casinos list
 casinos = list()
 
-# get casino data for specific month year from web
-casinos.append(fetchCasinoMonthData(monthNumber, yearNumber))
-
 # get casino data for  month -2  from web
 if monthNumberLast is not None and yearNumberLast is not None:
     casinos.append(fetchCasinoMonthData(monthNumberLast, yearNumberLast))
+
+# get casino data for specific month year from web
+casinos.append(fetchCasinoMonthData(monthNumber, yearNumber))
 
 # connect to db, when not in test mode
 con = None
@@ -249,9 +252,9 @@ for casinoMonthData in casinos:
     for item in casinoMonthData:
         # inserting into db
         if not test_mode_no_db:
-            printLog("inserting data weather current", item.name)
+            printLog("inserting data ", item.name, item.yearMonth)
             cursor.callproc('ADD_ITALY_CASINO_DATA',
-                            [loadId, item.monthYear, item.name,
+                            [loadId, item.yearMonth, item.name,
                              item.data["INGRESSI"],
                              item.data["Totale Introiti Lordi"],
                              item.data["Roulette Francese"],
@@ -274,7 +277,7 @@ for casinoMonthData in casinos:
         else:
             # test print
             # item.printData()
-            print(loadId, item.monthYear, item.name,
+            print(loadId, item.yearMonth, item.name,
                   item.data["INGRESSI"],
                   item.data["Totale Introiti Lordi"],
                   item.data["Roulette Francese"],
