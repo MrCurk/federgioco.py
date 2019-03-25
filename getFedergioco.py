@@ -53,6 +53,14 @@ def euroString2Float(value):
 
     return (data)
 
+########################################################################################################################
+### function to convert string 12,111 value to integer
+def string2Integer(value):
+    # remove , from data
+    data = value.replace(',', '')
+    # remove . from data
+
+    return (data)
 
 ########################################################################################################################
 ### function print log
@@ -120,7 +128,10 @@ def fetchCasinoMonthData(month, year):
                     gameName = "INGRESSI"
             else:
                 # others columns are data
-                casinos[i - 1].data[gameName] = euroString2Float(singleColumn.text)
+                if gameName == "INGRESSI": # INGRESSI has string format 11,111
+                    casinos[i - 1].data[gameName] = string2Integer(singleColumn.text)
+                else: # other data fromat is 11.111,11
+                    casinos[i - 1].data[gameName] = euroString2Float(singleColumn.text)
             i += 1
 
     return casinos
